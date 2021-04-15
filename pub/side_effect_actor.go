@@ -110,7 +110,7 @@ func (a *sideEffectActor) PostInbox(c context.Context, inboxIRI *url.URL, activi
 		return err
 	}
 	if isNew {
-		wrapped, other, err := a.s2s.FederatingCallbacks(c)
+		wrapped, other, err := a.s2s.FederatingCallbacks(c, a)
 		if err != nil {
 			return err
 		}
