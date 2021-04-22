@@ -793,7 +793,9 @@ func (a *sideEffectActor) dereferenceForResolvingInboxes(c context.Context, t Tr
 			}
 		}
 		actor = nil
-	} else if v, ok := actor.(orderedItemser); ok {
+	} else if streams.IsOrExtendsActivityStreamsOrderedCollection(actor) {
+		v := actor.(vocab.ActivityStreamsOrderedCollection)
+
 		if i := v.GetActivityStreamsOrderedItems(); i != nil {
 			for iter := i.Begin(); iter != i.End(); iter = iter.Next() {
 				var id *url.URL
@@ -804,7 +806,66 @@ func (a *sideEffectActor) dereferenceForResolvingInboxes(c context.Context, t Tr
 				moreActorIRIs = append(moreActorIRIs, id)
 			}
 		}
+
+		if firstPage := v.GetActivityStreamsFirst(); firstPage != nil {
+			var extendedList []*url.URL
+			extendedList, err = a.extractFromPagedCollection(c, t, firstPage.GetIRI())
+			moreActorIRIs = append(moreActorIRIs, extendedList...)
+		}
+
 		actor = nil
 	}
 	return
+}
+
+func (a *sideEffectActor) extractFromPagedCollection(ctx context.Context, t Transport, pageIRI *url.URL) ([]*url.URL, error) {
+	var res []*url.URL
+
+	for {
+		resp, err := t.Dereference(ctx, pageIRI)
+		if err != nil {
+			return nil, err
+		}
+		var m map[string]interface{}
+		if err = json.Unmarshal(resp, &m); err != nil {
+			return nil, err
+		}
+		page, err := streams.ToType(ctx, m)
+		if err != nil {
+			return nil, err
+		}
+
+		if !streams.IsOrExtendsActivityStreamsOrderedCollectionPage(page) {
+			break
+		}
+
+		v := page.(vocab.ActivityStreamsOrderedCollectionPage)
+
+		isEmpty := true
+		if i := v.GetActivityStreamsOrderedItems(); i != nil {
+			for iter := i.Begin(); iter != i.End(); iter = iter.Next() {
+				var id *url.URL
+				id, err = ToId(iter)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, id)
+				isEmpty = false
+			}
+		}
+
+		// quit if the current page is empty
+		if isEmpty {
+			break
+		}
+
+		// proceed to the next page, if present
+		if next := v.GetActivityStreamsNext(); next != nil {
+			pageIRI = next.GetIRI()
+		} else {
+			break
+		}
+	}
+
+	return res, nil
 }
