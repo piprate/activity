@@ -84,7 +84,7 @@ type FederatingProtocol interface {
 	//
 	// Applications are not expected to handle every single ActivityStreams
 	// type and extension. The unhandled ones are passed to DefaultCallback.
-	FederatingCallbacks(c context.Context) (wrapped FederatingWrappedCallbacks, other []interface{}, err error)
+	FederatingCallbacks(c context.Context, delegate DelegateActor) (wrapped FederatingWrappedCallbacks, other []interface{}, err error)
 	// DefaultCallback is called for types that go-fed can deserialize but
 	// are not handled by the application's callbacks returned in the
 	// Callbacks method.
