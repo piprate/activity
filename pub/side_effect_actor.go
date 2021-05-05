@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/go-fed/activity/streams"
-	"github.com/go-fed/activity/streams/vocab"
 	"net/http"
 	"net/url"
+
+	"github.com/go-fed/activity/streams"
+	"github.com/go-fed/activity/streams/vocab"
 )
 
 // sideEffectActor must satisfy the DelegateActor interface.
@@ -370,27 +371,6 @@ func (a *sideEffectActor) AddNewIDs(c context.Context, activity Activity) error 
 	activityId := streams.NewJSONLDIdProperty()
 	activityId.Set(id)
 	activity.SetJSONLDId(activityId)
-	if streams.IsOrExtendsActivityStreamsCreate(activity) {
-		o, ok := activity.(objecter)
-		if !ok {
-			return fmt.Errorf("cannot add new id for Create: %T has no object property", activity)
-		}
-		if oProp := o.GetActivityStreamsObject(); oProp != nil {
-			for iter := oProp.Begin(); iter != oProp.End(); iter = iter.Next() {
-				t := iter.GetType()
-				if t == nil {
-					return fmt.Errorf("cannot add new id for object in Create: object is not embedded as a value literal")
-				}
-				id, err = a.db.NewID(c, t)
-				if err != nil {
-					return err
-				}
-				objId := streams.NewJSONLDIdProperty()
-				objId.Set(id)
-				t.SetJSONLDId(objId)
-			}
-		}
-	}
 	return nil
 }
 
@@ -794,7 +774,7 @@ func (a *sideEffectActor) dereferenceForResolvingInboxes(c context.Context, t Tr
 		}
 		actor = nil
 	} else if streams.IsOrExtendsActivityStreamsOrderedCollection(actor) {
-		v := actor.(vocab.ActivityStreamsOrderedCollection)
+		v := actor.(orderedItemPager)
 
 		if i := v.GetActivityStreamsOrderedItems(); i != nil {
 			for iter := i.Begin(); iter != i.End(); iter = iter.Next() {

@@ -1029,44 +1029,6 @@ func TestAddNewIDs(t *testing.T) {
 		assertNotEqual(t, resultId, nil)
 		assertEqual(t, resultId.Get().String(), mustParse(testNewActivityIRI2).String())
 	})
-	t.Run("AddsIdsToObjectsIfCreateActivity", func(t *testing.T) {
-		// Setup
-		ctl := gomock.NewController(t)
-		defer ctl.Finish()
-		_, _, _, db, _, a := setupFn(ctl)
-		db.EXPECT().NewID(ctx, testMyCreate).Return(mustParse(testNewActivityIRI2), nil)
-		db.EXPECT().NewID(ctx, testMyNote).Return(mustParse(testNewActivityIRI3), nil)
-		// Run
-		err := a.AddNewIDs(ctx, testMyCreate)
-		// Verify
-		assertEqual(t, err, nil)
-		op := testMyCreate.GetActivityStreamsObject()
-		assertNotEqual(t, op, nil)
-		assertEqual(t, op.Len(), 1)
-		n := op.At(0).GetActivityStreamsNote()
-		assertNotEqual(t, n, nil)
-		noteId := n.GetJSONLDId()
-		assertNotEqual(t, noteId, nil)
-		assertEqual(t, noteId.Get().String(), mustParse(testNewActivityIRI3).String())
-	})
-	t.Run("DoesNotAddIdsToObjectsIfNotCreateActivity", func(t *testing.T) {
-		// Setup
-		ctl := gomock.NewController(t)
-		defer ctl.Finish()
-		_, _, _, db, _, a := setupFn(ctl)
-		db.EXPECT().NewID(ctx, testMyListenNoId).Return(mustParse(testNewActivityIRI2), nil)
-		// Run
-		err := a.AddNewIDs(ctx, testMyListenNoId)
-		// Verify
-		assertEqual(t, err, nil)
-		op := testMyListenNoId.GetActivityStreamsObject()
-		assertNotEqual(t, op, nil)
-		assertEqual(t, op.Len(), 1)
-		n := op.At(0).GetActivityStreamsNote()
-		assertNotEqual(t, n, nil)
-		noteId := n.GetJSONLDId()
-		assertEqual(t, noteId, nil)
-	})
 }
 
 // TestDeliver ensures federated delivery of an activity happens correctly to

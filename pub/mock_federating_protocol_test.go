@@ -83,7 +83,7 @@ func (mr *MockFederatingProtocolMockRecorder) Blocked(c, actorIRIs interface{}) 
 }
 
 // FederatingCallbacks mocks base method
-func (m *MockFederatingProtocol) FederatingCallbacks(c context.Context) (FederatingWrappedCallbacks, []interface{}, error) {
+func (m *MockFederatingProtocol) FederatingCallbacks(c context.Context, delegate DelegateActor) (FederatingWrappedCallbacks, []interface{}, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FederatingCallbacks", c)
 	ret0, _ := ret[0].(FederatingWrappedCallbacks)
