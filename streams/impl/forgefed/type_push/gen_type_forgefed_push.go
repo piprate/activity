@@ -15,17 +15,17 @@ import (
 //       "https://www.w3.org/ns/activitystreams",
 //       "https://forgefed.peers.community/ns"
 //     ],
-//     "actor": "https://example.dev/aviva",
-//     "context": "https://example.dev/aviva/myproject",
-//     "id": "https://example.dev/aviva/outbox/reBGo",
+//     "actor": "https://example.org/aviva",
+//     "context": "https://example.org/aviva/myproject",
+//     "id": "https://example.org/aviva/outbox/reBGo",
 //     "object": {
 //       "items": [
 //         {
-//           "attributedTo": "https://example.dev/aviva",
-//           "context": "https://example.dev/aviva/myproject",
+//           "attributedTo": "https://example.org/aviva",
+//           "context": "https://example.org/aviva/myproject",
 //           "created": "2019-11-03T13:43:59Z",
 //           "hash": "d96596230322716bd6f87a232a648ca9822a1c20",
-//           "id": "https://example.dev/aviva/myproject/commits/d96596230322716bd6f87a232a648ca9822a1c20",
+//           "id": "https://example.org/aviva/myproject/commits/d96596230322716bd6f87a232a648ca9822a1c20",
 //           "summary": "Provide hints in sign-up form fields",
 //           "type": "Commit"
 //         }
@@ -35,12 +35,12 @@ import (
 //     },
 //     "summary": "\u003cp\u003eAviva pushed a commit to
 // myproject\u003c/p\u003e",
-//     "target": "https://example.dev/aviva/myproject/branches/master",
+//     "target": "https://example.org/aviva/myproject/branches/master",
 //     "to": [
-//       "https://example.dev/aviva/followers",
-//       "https://example.dev/aviva/myproject",
-//       "https://example.dev/aviva/myproject/team",
-//       "https://example.dev/aviva/myproject/followers"
+//       "https://example.org/aviva/followers",
+//       "https://example.org/aviva/myproject",
+//       "https://example.org/aviva/myproject/team",
+//       "https://example.org/aviva/myproject/followers"
 //     ],
 //     "type": "Push"
 //   }
@@ -73,6 +73,7 @@ type ForgeFedPush struct {
 	ActivityStreamsPublished    vocab.ActivityStreamsPublishedProperty
 	ActivityStreamsReplies      vocab.ActivityStreamsRepliesProperty
 	ActivityStreamsResult       vocab.ActivityStreamsResultProperty
+	ActivityStreamsSensitive    vocab.ActivityStreamsSensitiveProperty
 	ActivityStreamsShares       vocab.ActivityStreamsSharesProperty
 	ActivityStreamsSource       vocab.ActivityStreamsSourceProperty
 	ActivityStreamsStartTime    vocab.ActivityStreamsStartTimeProperty
@@ -267,6 +268,11 @@ func DeserializePush(m map[string]interface{}, aliasMap map[string]string) (*For
 	} else if p != nil {
 		this.ActivityStreamsResult = p
 	}
+	if p, err := mgr.DeserializeSensitivePropertyActivityStreams()(m, aliasMap); err != nil {
+		return nil, err
+	} else if p != nil {
+		this.ActivityStreamsSensitive = p
+	}
 	if p, err := mgr.DeserializeSharesPropertyActivityStreams()(m, aliasMap); err != nil {
 		return nil, err
 	} else if p != nil {
@@ -396,6 +402,8 @@ func DeserializePush(m map[string]interface{}, aliasMap map[string]string) (*For
 		} else if k == "replies" {
 			continue
 		} else if k == "result" {
+			continue
+		} else if k == "sensitive" {
 			continue
 		} else if k == "shares" {
 			continue
@@ -646,6 +654,12 @@ func (this ForgeFedPush) GetActivityStreamsResult() vocab.ActivityStreamsResultP
 	return this.ActivityStreamsResult
 }
 
+// GetActivityStreamsSensitive returns the "sensitive" property if it exists, and
+// nil otherwise.
+func (this ForgeFedPush) GetActivityStreamsSensitive() vocab.ActivityStreamsSensitiveProperty {
+	return this.ActivityStreamsSensitive
+}
+
 // GetActivityStreamsShares returns the "shares" property if it exists, and nil
 // otherwise.
 func (this ForgeFedPush) GetActivityStreamsShares() vocab.ActivityStreamsSharesProperty {
@@ -779,6 +793,7 @@ func (this ForgeFedPush) JSONLDContext() map[string]string {
 	m = this.helperJSONLDContext(this.ActivityStreamsPublished, m)
 	m = this.helperJSONLDContext(this.ActivityStreamsReplies, m)
 	m = this.helperJSONLDContext(this.ActivityStreamsResult, m)
+	m = this.helperJSONLDContext(this.ActivityStreamsSensitive, m)
 	m = this.helperJSONLDContext(this.ActivityStreamsShares, m)
 	m = this.helperJSONLDContext(this.ActivityStreamsSource, m)
 	m = this.helperJSONLDContext(this.ActivityStreamsStartTime, m)
@@ -1180,6 +1195,20 @@ func (this ForgeFedPush) LessThan(o vocab.ForgeFedPush) bool {
 	} // Else: Both are nil
 	// Compare property "result"
 	if lhs, rhs := this.ActivityStreamsResult, o.GetActivityStreamsResult(); lhs != nil && rhs != nil {
+		if lhs.LessThan(rhs) {
+			return true
+		} else if rhs.LessThan(lhs) {
+			return false
+		}
+	} else if lhs == nil && rhs != nil {
+		// Nil is less than anything else
+		return true
+	} else if rhs != nil && rhs == nil {
+		// Anything else is greater than nil
+		return false
+	} // Else: Both are nil
+	// Compare property "sensitive"
+	if lhs, rhs := this.ActivityStreamsSensitive, o.GetActivityStreamsSensitive(); lhs != nil && rhs != nil {
 		if lhs.LessThan(rhs) {
 			return true
 		} else if rhs.LessThan(lhs) {
@@ -1621,6 +1650,14 @@ func (this ForgeFedPush) Serialize() (map[string]interface{}, error) {
 			m[this.ActivityStreamsResult.Name()] = i
 		}
 	}
+	// Maybe serialize property "sensitive"
+	if this.ActivityStreamsSensitive != nil {
+		if i, err := this.ActivityStreamsSensitive.Serialize(); err != nil {
+			return nil, err
+		} else if i != nil {
+			m[this.ActivityStreamsSensitive.Name()] = i
+		}
+	}
 	// Maybe serialize property "shares"
 	if this.ActivityStreamsShares != nil {
 		if i, err := this.ActivityStreamsShares.Serialize(); err != nil {
@@ -1872,6 +1909,11 @@ func (this *ForgeFedPush) SetActivityStreamsReplies(i vocab.ActivityStreamsRepli
 // SetActivityStreamsResult sets the "result" property.
 func (this *ForgeFedPush) SetActivityStreamsResult(i vocab.ActivityStreamsResultProperty) {
 	this.ActivityStreamsResult = i
+}
+
+// SetActivityStreamsSensitive sets the "sensitive" property.
+func (this *ForgeFedPush) SetActivityStreamsSensitive(i vocab.ActivityStreamsSensitiveProperty) {
+	this.ActivityStreamsSensitive = i
 }
 
 // SetActivityStreamsShares sets the "shares" property.

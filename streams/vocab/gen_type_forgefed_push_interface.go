@@ -9,17 +9,17 @@ package vocab
 //       "https://www.w3.org/ns/activitystreams",
 //       "https://forgefed.peers.community/ns"
 //     ],
-//     "actor": "https://example.dev/aviva",
-//     "context": "https://example.dev/aviva/myproject",
-//     "id": "https://example.dev/aviva/outbox/reBGo",
+//     "actor": "https://example.org/aviva",
+//     "context": "https://example.org/aviva/myproject",
+//     "id": "https://example.org/aviva/outbox/reBGo",
 //     "object": {
 //       "items": [
 //         {
-//           "attributedTo": "https://example.dev/aviva",
-//           "context": "https://example.dev/aviva/myproject",
+//           "attributedTo": "https://example.org/aviva",
+//           "context": "https://example.org/aviva/myproject",
 //           "created": "2019-11-03T13:43:59Z",
 //           "hash": "d96596230322716bd6f87a232a648ca9822a1c20",
-//           "id": "https://example.dev/aviva/myproject/commits/d96596230322716bd6f87a232a648ca9822a1c20",
+//           "id": "https://example.org/aviva/myproject/commits/d96596230322716bd6f87a232a648ca9822a1c20",
 //           "summary": "Provide hints in sign-up form fields",
 //           "type": "Commit"
 //         }
@@ -29,12 +29,12 @@ package vocab
 //     },
 //     "summary": "\u003cp\u003eAviva pushed a commit to
 // myproject\u003c/p\u003e",
-//     "target": "https://example.dev/aviva/myproject/branches/master",
+//     "target": "https://example.org/aviva/myproject/branches/master",
 //     "to": [
-//       "https://example.dev/aviva/followers",
-//       "https://example.dev/aviva/myproject",
-//       "https://example.dev/aviva/myproject/team",
-//       "https://example.dev/aviva/myproject/followers"
+//       "https://example.org/aviva/followers",
+//       "https://example.org/aviva/myproject",
+//       "https://example.org/aviva/myproject/team",
+//       "https://example.org/aviva/myproject/followers"
 //     ],
 //     "type": "Push"
 //   }
@@ -120,6 +120,9 @@ type ForgeFedPush interface {
 	// GetActivityStreamsResult returns the "result" property if it exists,
 	// and nil otherwise.
 	GetActivityStreamsResult() ActivityStreamsResultProperty
+	// GetActivityStreamsSensitive returns the "sensitive" property if it
+	// exists, and nil otherwise.
+	GetActivityStreamsSensitive() ActivityStreamsSensitiveProperty
 	// GetActivityStreamsShares returns the "shares" property if it exists,
 	// and nil otherwise.
 	GetActivityStreamsShares() ActivityStreamsSharesProperty
@@ -237,6 +240,8 @@ type ForgeFedPush interface {
 	SetActivityStreamsReplies(i ActivityStreamsRepliesProperty)
 	// SetActivityStreamsResult sets the "result" property.
 	SetActivityStreamsResult(i ActivityStreamsResultProperty)
+	// SetActivityStreamsSensitive sets the "sensitive" property.
+	SetActivityStreamsSensitive(i ActivityStreamsSensitiveProperty)
 	// SetActivityStreamsShares sets the "shares" property.
 	SetActivityStreamsShares(i ActivityStreamsSharesProperty)
 	// SetActivityStreamsSource sets the "source" property.
