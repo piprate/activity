@@ -759,16 +759,15 @@ func (a *sideEffectActor) prepare(c context.Context, outboxIRI *url.URL, activit
 // dereference the collection, WITH the user's credentials.
 //
 // Note that this also applies to CollectionPage and OrderedCollectionPage.
-func (a *sideEffectActor) resolveActors(c context.Context, t Transport, r []*url.URL, depth, maxDepth int) (actors []vocab.Type, err error) {
+func (a *sideEffectActor) resolveActors(c context.Context, t Transport, r []*url.URL, depth, maxDepth int) ([]vocab.Type, error) {
+	var actors []vocab.Type
 	if maxDepth > 0 && depth >= maxDepth {
-		return
+		return nil, nil
 	}
 	for _, u := range r {
-		var act vocab.Type
-		var more []*url.URL
 		// TODO: Determine if more logic is needed here for inaccessible
 		// collections owned by peer servers.
-		act, more, err = a.dereferenceForResolvingInboxes(c, t, u)
+		act, more, err := a.dereferenceForResolvingInboxes(c, t, u)
 		if err != nil {
 			// Missing recipient -- skip.
 			continue
@@ -776,14 +775,14 @@ func (a *sideEffectActor) resolveActors(c context.Context, t Transport, r []*url
 		var recurActors []vocab.Type
 		recurActors, err = a.resolveActors(c, t, more, depth+1, maxDepth)
 		if err != nil {
-			return
+			return nil, err
 		}
 		if act != nil {
 			actors = append(actors, act)
 		}
 		actors = append(actors, recurActors...)
 	}
-	return
+	return actors, nil
 }
 
 // dereferenceForResolvingInboxes dereferences an IRI solely for finding an
