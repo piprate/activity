@@ -58,6 +58,13 @@ type Database interface {
 	//
 	// The library makes this call only after acquiring a lock first.
 	OutboxForInbox(c context.Context, inboxIRI *url.URL) (outboxIRI *url.URL, err error)
+	// InboxForActor fetches the inbox corresponding to the given actorIRI.
+	//
+	// It is acceptable to just return nil for the inboxIRI. In this case, the library will
+	// attempt to resolve the inbox of the actor by remote dereferencing instead.
+	//
+	// The library makes this call only after acquiring a lock first.
+	InboxForActor(c context.Context, actorIRI *url.URL) (inboxIRI *url.URL, err error)
 	// Exists returns true if the database has an entry for the specified
 	// id. It may not be owned by this application instance.
 	//
@@ -101,7 +108,7 @@ type Database interface {
 	// at the specified IRI, for prepending new items.
 	//
 	// The library makes this call only after acquiring a lock first.
-	GetOutbox(c context.Context, outboxIRI *url.URL) (inbox vocab.ActivityStreamsOrderedCollectionPage, err error)
+	GetOutbox(c context.Context, outboxIRI *url.URL) (outbox vocab.ActivityStreamsOrderedCollectionPage, err error)
 	// SetOutbox saves the outbox value given from GetOutbox, with new items
 	// prepended. Note that the new items must not be added as independent
 	// database entries. Separate calls to Create will do that.
@@ -128,12 +135,12 @@ type Database interface {
 	// If modified, the library will then call Update.
 	//
 	// The library makes this call only after acquiring a lock first.
-	Following(c context.Context, actorIRI *url.URL) (followers vocab.ActivityStreamsCollection, err error)
+	Following(c context.Context, actorIRI *url.URL) (following vocab.ActivityStreamsCollection, err error)
 	// Liked obtains the Liked Collection for an actor with the
 	// given id.
 	//
 	// If modified, the library will then call Update.
 	//
 	// The library makes this call only after acquiring a lock first.
-	Liked(c context.Context, actorIRI *url.URL) (followers vocab.ActivityStreamsCollection, err error)
+	Liked(c context.Context, actorIRI *url.URL) (liked vocab.ActivityStreamsCollection, err error)
 }
